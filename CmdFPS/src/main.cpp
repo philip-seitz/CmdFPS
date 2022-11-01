@@ -18,7 +18,6 @@ int main()
 		for (int y = 0; y < screen_h; y++)
 		{
 			sbuf[y * screen_w + x] = L' ';
-
 		}
 	}
 
@@ -27,6 +26,8 @@ int main()
 	{
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
 	}
+
+	// comment from Desktop
 
 	return 0;
 }
