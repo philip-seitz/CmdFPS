@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <string>
 #define PI 3.14;
-#define FOV 60.0
+#define FOV 100.0
 using namespace std;
 
 int main()
@@ -20,8 +20,7 @@ int main()
 	int screen_h = 40;
 	wchar_t* sbuf = new wchar_t[screen_w * screen_h];
 
-	// Draw the Screen with blanks so the console shows ==============================================
-
+	// Draw the Screen with blanks so the console shows 
 	for (int x = 0; x < screen_w; x++)
 	{
 		for (int y = 0; y < screen_h; y++)
@@ -53,13 +52,46 @@ int main()
 	bool wallHit = false;
 	float scaler = 0.1;
 
-	// Game Loop =====================================================================================
+	// Start Game Loop ===============================================================================
 
 	while (1)
 	{
-		for (int i = 0; i < screen_w; i++)
+		if (GetAsyncKeyState(VK_RIGHT) & 0x01)
 		{
-			float fRayAngle = anglePlayer + fov / 2 - float(i) / (float(screen_w) - 1.0) * fov;
+			anglePlayer -= 0.1;
+		}
+		if (GetAsyncKeyState(VK_LEFT) & 0x01)
+		{
+			anglePlayer += 0.1;
+		}
+		if (GetAsyncKeyState(0x57) & 0x01)			// W-key
+		{
+			yPlayer -= 0.5 * cos(anglePlayer);
+			xPlayer -= 0.5 * sin(anglePlayer);
+		}
+
+		if (GetAsyncKeyState(0x53) & 0x01)			// S-key
+		{
+			yPlayer += 0.5 * cos(anglePlayer);
+			xPlayer += 0.5 * sin(anglePlayer);
+		}
+
+		if (GetAsyncKeyState(0x44) & 0x01)			// D-key
+		{
+			 yPlayer -= 0.5 * sin(anglePlayer);
+			 xPlayer += 0.5 * cos(anglePlayer);
+		}
+
+		if (GetAsyncKeyState(0x41) & 0x01)			// A-key
+		{
+			yPlayer += 0.5 * sin(anglePlayer);
+			xPlayer -= 0.5 * cos(anglePlayer);
+		}
+
+
+		for (int x = 0; x < screen_w; x++)
+		{
+			float fRayAngle = anglePlayer + fov / 2 - float(x) / (float(screen_w) - 1.0) * fov;
 			float fRayX = -sin(fRayAngle);				// because of positive angle to the left (change sign)
 			float fRayY = -cos(fRayAngle);				// y axis points downwards
 			float testX = xPlayer;
@@ -89,6 +121,25 @@ int main()
 					break;
 				}
 			}
+			
+			int ceiling = screen_h / 2.0 - screen_h / 2.0 * 1.0 / (1.0 + distance);
+			int floor = screen_h / 2.0 + screen_h / 2.0 * 1.0 / (1.0 + distance);
+			// rendering walls, floor and ceiling 
+			for (int y = 0; y < screen_h; y++)
+			{
+				if (y < ceiling)
+				{
+					sbuf[y * screen_w + x] = L' ';
+				}
+				else if (y > floor)
+				{
+					sbuf[y * screen_w + x] = L'/';
+				}
+				else
+				{
+					sbuf[y * screen_w + x] = L'#';
+				}
+			}
 		}
 
 		// PROBLEM:
@@ -109,9 +160,11 @@ int main()
 		{
 			for (int y = 0; y < map_h; y++)
 			{
-				sbuf[(y + 5) * screen_w + x + 5] = map[y * map_w + x];
+				sbuf[(y) * screen_w + x + 1] = map[y * map_w + x];
 			}
 		}
+		sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
+
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
 	}
 	
