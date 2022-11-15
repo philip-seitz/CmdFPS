@@ -73,11 +73,11 @@ int main()
 		timeStart = chrono::system_clock::now();
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		{
-			anglePlayer -= 2 * dt;
+			anglePlayer -= 3 * dt;
 		}
 		if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 		{
-			anglePlayer += 2 * dt;
+			anglePlayer += 3 * dt;
 		}
 		if (GetAsyncKeyState(0x57) & 0x8000)			// W-key
 		{
