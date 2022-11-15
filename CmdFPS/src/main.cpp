@@ -1,18 +1,27 @@
 #include <iostream>
 #include <Windows.h>
 #include <string>
+#include <chrono>
+#include <ctime>
+
 #define PI 3.14;
 #define FOV 100.0
 using namespace std;
 
 int main()
 {
+	// Time Handling =================================================================================
+
+	chrono::time_point<chrono::system_clock> timeStart, timeEnd;
+	chrono::duration<float> timeElapsed;
+	timeStart = chrono::system_clock::now();
+
 	// Player Attribrutes ============================================================================
 	float xPlayer = 15;
 	float yPlayer = 4;
 	float anglePlayer = 0;
 	float fov = FOV/180.0*PI;			// rad = 2pi*angle/360
-	// FOV should be equal to or below 120° (usual FOV cap)
+	// FOV should be equal to or below 120Â° (usual FOV cap)
 
 	// Screen Buffer initialization ==================================================================
 
@@ -51,41 +60,47 @@ int main()
 
 	bool wallHit = false;
 	float scaler = 0.1;
-
+	
+	
 	// Start Game Loop ===============================================================================
 
+	timeEnd = chrono::system_clock::now();
 	while (1)
 	{
+		timeElapsed = timeEnd - timeStart;
+		float dt = timeElapsed.count();
+
+		timeStart = chrono::system_clock::now();
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		{
-			anglePlayer -= 0.0025;
+			anglePlayer -= 3 * dt;
 		}
 		if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 		{
-			anglePlayer += 0.0025;
+			anglePlayer += 3 * dt;
 		}
 		if (GetAsyncKeyState(0x57) & 0x8000)			// W-key
 		{
-			yPlayer -= 0.002 * cos(anglePlayer);
-			xPlayer -= 0.002 * sin(anglePlayer);
+			yPlayer -= 1 * cos(anglePlayer) * dt;
+			xPlayer -= 1 * sin(anglePlayer) * dt;
 		}
 
 		if (GetAsyncKeyState(0x53) & 0x8000)			// S-key
 		{
-			yPlayer += 0.002 * cos(anglePlayer);
-			xPlayer += 0.002 * sin(anglePlayer);
+			yPlayer += 1 * cos(anglePlayer) * dt;
+			xPlayer += 1 * sin(anglePlayer) * dt;
 		}
 
 		if (GetAsyncKeyState(0x44) & 0x8000)			// D-key
 		{
-			 yPlayer -= 0.002 * sin(anglePlayer);
-			 xPlayer += 0.002 * cos(anglePlayer);
+			 yPlayer -= 1 * sin(anglePlayer) * dt;
+			 xPlayer += 1 * cos(anglePlayer) * dt;
 		}
 
 		if (GetAsyncKeyState(0x41) & 0x8000)			// A-key
 		{
-			yPlayer += 0.002 * sin(anglePlayer);
-			xPlayer -= 0.002 * cos(anglePlayer);
+			yPlayer += 1 * sin(anglePlayer) * dt;
+			xPlayer -= 1 * cos(anglePlayer) * dt;
 		}
 
 
@@ -166,6 +181,7 @@ int main()
 		sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
 
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
+		timeEnd = chrono::system_clock::now();
 	}
 	
 	// End of Game Loop ==============================================================================
