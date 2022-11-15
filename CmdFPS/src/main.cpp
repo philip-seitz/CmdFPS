@@ -56,36 +56,36 @@ int main()
 
 	while (1)
 	{
-		if (GetAsyncKeyState(VK_RIGHT) & 0x01)
+		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		{
-			anglePlayer -= 0.1;
+			anglePlayer -= 0.006;
 		}
-		if (GetAsyncKeyState(VK_LEFT) & 0x01)
+		if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 		{
-			anglePlayer += 0.1;
+			anglePlayer += 0.006;
 		}
-		if (GetAsyncKeyState(0x57) & 0x01)			// W-key
+		if (GetAsyncKeyState(0x57) & 0x8000)			// W-key
 		{
-			yPlayer -= 0.5 * cos(anglePlayer);
-			xPlayer -= 0.5 * sin(anglePlayer);
-		}
-
-		if (GetAsyncKeyState(0x53) & 0x01)			// S-key
-		{
-			yPlayer += 0.5 * cos(anglePlayer);
-			xPlayer += 0.5 * sin(anglePlayer);
+			yPlayer -= 0.002 * cos(anglePlayer);
+			xPlayer -= 0.002 * sin(anglePlayer);
 		}
 
-		if (GetAsyncKeyState(0x44) & 0x01)			// D-key
+		if (GetAsyncKeyState(0x53) & 0x8000)			// S-key
 		{
-			 yPlayer -= 0.5 * sin(anglePlayer);
-			 xPlayer += 0.5 * cos(anglePlayer);
+			yPlayer += 0.002 * cos(anglePlayer);
+			xPlayer += 0.002 * sin(anglePlayer);
 		}
 
-		if (GetAsyncKeyState(0x41) & 0x01)			// A-key
+		if (GetAsyncKeyState(0x44) & 0x8000)			// D-key
 		{
-			yPlayer += 0.5 * sin(anglePlayer);
-			xPlayer -= 0.5 * cos(anglePlayer);
+			 yPlayer -= 0.002 * sin(anglePlayer);
+			 xPlayer += 0.002 * cos(anglePlayer);
+		}
+
+		if (GetAsyncKeyState(0x41) & 0x8000)			// A-key
+		{
+			yPlayer += 0.002 * sin(anglePlayer);
+			xPlayer -= 0.002 * cos(anglePlayer);
 		}
 
 
