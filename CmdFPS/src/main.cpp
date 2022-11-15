@@ -58,11 +58,11 @@ int main()
 	{
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		{
-			anglePlayer -= 0.006;
+			anglePlayer -= 0.0025;
 		}
 		if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 		{
-			anglePlayer += 0.006;
+			anglePlayer += 0.0025;
 		}
 		if (GetAsyncKeyState(0x57) & 0x8000)			// W-key
 		{
