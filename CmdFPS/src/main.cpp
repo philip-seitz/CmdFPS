@@ -21,7 +21,7 @@ int main()
 	float yPlayer = 4;
 	float anglePlayer = 0;
 	float fov = FOV/180.0*PI;			// rad = 2pi*angle/360
-	// FOV should be equal to or below 120° (usual FOV cap)
+	// FOV should be equal to or below 120Â° (usual FOV cap)
 
 	// Screen Buffer initialization ==================================================================
 
