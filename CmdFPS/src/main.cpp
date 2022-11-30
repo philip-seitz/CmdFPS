@@ -1,15 +1,19 @@
 #include <iostream>
+#include <cstdlib>
 #include <Windows.h>
 #include <string>
 #include <chrono>
+#include <time.h>
 #include <ctime>
 
+#include "Enemy.h"
 #define PI 3.14;
 #define FOV 60.0
 using namespace std;
 
 int main()
 {
+	srand(time(0));										// TODO: how does rand() work (with rng seed (srand()) etc.)
 	// Time Handling =================================================================================
 
 	chrono::time_point<chrono::system_clock> timeStart, timeEnd;
@@ -37,7 +41,7 @@ int main()
 			sbuf[y * screen_w + x] = L' ';
 		}
 	}
-
+	cEnemy tmp;
 	// Map initialization ============================================================================
 
 	int map_w = 12;
@@ -47,7 +51,7 @@ int main()
 
 	map += L"############";		// 0
 	map += L"#          #";		// 1
-	map += L"#          #";		// 2
+	map += L"#    #     #";		// 2
 	map += L"#          #";		// 3
 	map += L"#          #";		// 4			y 4- 1 , x 15-13.25; 
 	map += L"#          #";		// 5
@@ -58,6 +62,21 @@ int main()
 	map += L"#          #";		// 10
 	map += L"############";		// 11
 
+	// Enemy Attributes for testing ==================================================================
+	cEnemy e1;
+	while(1)
+	{
+		int tmpX = rand() % (map_w - 1) + 1;
+		int tmpY = rand() % (map_h - 1) + 1;
+		if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+		{
+			map[tmpY * map_w + tmpX] = L'E';
+			e1.setX(tmpX);
+			e1.setY(tmpY);
+			break;
+		}
+	} 
+
 	HANDLE sbuf_h = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	DWORD dwBytesWritten = 0;
 	SetConsoleActiveScreenBuffer(sbuf_h);
@@ -66,14 +85,29 @@ int main()
 
 	float scaler = 0.1;
 	float speed = 2.0;
+	bool gameOver = false;
 
 	// Start Game Loop ===============================================================================
 
 	timeEnd = chrono::system_clock::now();
-	while (1)
+	float totalTime = 0;			// über time elapsed hochzählen und dann counter zeug machen
+	while (!gameOver)
 	{
 		timeElapsed = timeEnd - timeStart;
 		float dt = timeElapsed.count();
+		totalTime += dt;
+		
+		// change the position of the enemy every 10 seconds
+		/*if (totalTime >= 10.0)
+		{
+			totalTime = 0.0;
+			map[yEnemy * map_w + xEnemy] = L' ';
+			do {
+				xEnemy = rand() % (map_w - 1) + 1;
+				yEnemy = rand() % (map_h - 1) + 1;
+			} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
+			map[yEnemy * map_w + xEnemy] = L'E';
+		}*/
 
 		timeStart = chrono::system_clock::now();
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
@@ -88,7 +122,7 @@ int main()
 		{
 			yPlayer -= speed * cos(anglePlayer) * dt;
 			xPlayer -= speed * sin(anglePlayer) * dt;
-			if (map[int(yPlayer)*map_w + int(xPlayer)] == L'#')
+			if (map[int(yPlayer)*map_w + int(xPlayer)] != L' ')
 			{
 				yPlayer += speed * cos(anglePlayer) * dt;
 				xPlayer += speed * sin(anglePlayer) * dt;
@@ -99,7 +133,7 @@ int main()
 			{
 				yPlayer += speed * cos(anglePlayer) * dt;
 				xPlayer += speed * sin(anglePlayer) * dt;
-				if (map[int(yPlayer) * map_w + int(xPlayer)] == L'#')
+				if (map[int(yPlayer) * map_w + int(xPlayer)] != L' ')
 				{
 					yPlayer -= speed * cos(anglePlayer) * dt;
 					xPlayer -= speed * sin(anglePlayer) * dt;
@@ -110,7 +144,7 @@ int main()
 			{
 				yPlayer -= speed * sin(anglePlayer) * dt;
 				xPlayer += speed * cos(anglePlayer) * dt;
-				if (map[int(yPlayer) * map_w + int(xPlayer)] == L'#')
+				if (map[int(yPlayer) * map_w + int(xPlayer)] != L' ')
 				{
 					yPlayer += speed * sin(anglePlayer) * dt;
 					xPlayer -= speed * cos(anglePlayer) * dt;
@@ -121,13 +155,63 @@ int main()
 			{
 				yPlayer += speed * sin(anglePlayer) * dt;
 				xPlayer -= speed * cos(anglePlayer) * dt;
-				if (map[int(yPlayer) * map_w + int(xPlayer)] == L'#')
+				if (map[int(yPlayer) * map_w + int(xPlayer)] != L' ')
 				{
 					yPlayer -= speed * sin(anglePlayer) * dt;
 					xPlayer += speed * cos(anglePlayer) * dt;
 				}
 			}
 
+			if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+			{
+				float distShot = 0.0;
+				float shotX = xPlayer;
+				float shotY = yPlayer;
+				float shotRayX = -sin(anglePlayer);
+				float shotRayY = -cos(anglePlayer);
+				bool enemyHit = false;
+
+				while (distShot <= 30)
+				{
+					shotX += shotRayX * scaler;
+					shotY += shotRayY * scaler;
+					distShot += scaler;
+					if (map[int(shotY) * map_w + (int(shotX))] != L' ')
+					{
+						if (map[int(shotY) * map_w + (int(shotX))] == L'E')
+						{
+							enemyHit = true;
+						}
+						break;
+					}
+				}
+
+				if (enemyHit)
+				{
+					map[e1.getPosY() * map_w + e1.getPosX()] = L' ';
+					e1.setX(0);
+					e1.setY(0);
+					/*do {
+						xEnemy = rand() % (map_w - 1) + 1;
+						yEnemy = rand() % (map_h - 1) + 1;
+					} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
+					map[yEnemy * map_w + xEnemy] = L'E';*/
+
+					while (1)
+					{
+						int tmpX = rand() % (map_w - 1) + 1;
+						int tmpY = rand() % (map_h - 1) + 1;
+						if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+						{
+							map[tmpY * map_w + tmpX] = L'E';
+							e1.setX(tmpX);
+							e1.setY(tmpY);
+							break;
+						}
+					}
+
+				}
+			}
 
 			for (int x = 0; x < screen_w; x++)
 			{
@@ -148,9 +232,10 @@ int main()
 										L'-'};
 				bool wallHit = false;
 				bool cornerHit = false;
+				bool enemyVisible = false;
 
 				// making sure the ray isn't being cast too far.
-				while (distance < depth)
+				while (distance < 30)
 				{
 					testX += fRayX * scaler;
 					testY += fRayY * scaler;
@@ -162,7 +247,14 @@ int main()
 					if ((testX > map_w) || testY > map_h)
 						break;
 
-					if ((map[int(testY) * map_w + int(testX)] == L'#') || (map[int(testY) * map_w + int(testX)] == L'x'))
+					if (map[int(testY) * map_w + int(testX)] == L'E')
+					{
+						enemyVisible = true;
+						wallHit = true;
+						break;
+					}
+
+					else if ((map[int(testY) * map_w + int(testX)] == L'#') || (map[int(testY) * map_w + int(testX)] == L'x'))
 					{
 						// map[int(testY) * map_w + int(testX)] = L'x';
 						// only for testing purposes. map should NOT be changed in run time!
@@ -232,9 +324,34 @@ int main()
 							sbuf[y * screen_w + x] = shade_f[2];
 						
 					}
-					else
+					else		// drawing the walls with shading
 					{
-						if (cornerHit)
+						// draw the enemy (testing)
+						if (enemyVisible)
+						{
+							if (cornerHit)
+							{
+								sbuf[y * screen_w + x] = L' ';
+							}
+							else if (distance <= 0.2)
+							{
+								sbuf[y * screen_w + x] = L'H';
+							}
+							else if (distance <= int(depth / 5))
+							{ 
+								sbuf[y * screen_w + x] = L'L';
+							}
+							else if (distance <= int(depth / 3))
+							{
+								sbuf[y * screen_w + x] = L'I';
+							}
+							else
+							{
+								sbuf[y * screen_w + x] = L'~';
+							}
+						}
+
+						else if (cornerHit)
 						{
 							sbuf[y * screen_w + x] = L' ';
 						}
@@ -247,6 +364,8 @@ int main()
 						else
 							sbuf[y * screen_w + x] = shade_w[3];
 					}
+
+					
 				}
 			}
 
@@ -261,6 +380,17 @@ int main()
 			// To decrease the chance of going to far forwards with the test you can also reduce the distance of the step
 			// by introducing a scaler with 0.1.
 
+			// Draw x-hair on top of the screen
+
+			for (int x = 0; x < 3; x++)
+			{
+				for (int y = 0; y < 2; y++)
+				{
+					sbuf[(y + 18)*screen_w + x + 58] = L'X';
+
+				}
+
+			}
 
 			// Draw the map "on top of the screen" ===========================================================
 
