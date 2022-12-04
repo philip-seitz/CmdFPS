@@ -27,6 +27,10 @@ int main()
 	float fov = FOV / 180.0 * PI;			// rad = 2pi*angle/360
 	// FOV should be equal to or below 120° (usual FOV cap)
 
+	// Enemy Attributes ==============================================================================
+
+	int maxEnemies = 5;
+
 	// Screen Buffer initialization ==================================================================
 
 	int screen_w = 120;
@@ -63,19 +67,31 @@ int main()
 	map += L"############";		// 11
 
 	// Enemy Attributes for testing ==================================================================
-	cEnemy e1;
-	while(1)
+	cEnemyStack stack;
+	for (int i = 0; i < 1; i++)
 	{
-		int tmpX = rand() % (map_w - 1) + 1;
-		int tmpY = rand() % (map_h - 1) + 1;
-		if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+		cEnemy e1;
+		while (1)
 		{
-			map[tmpY * map_w + tmpX] = L'E';
-			e1.setX(tmpX);
-			e1.setY(tmpY);
-			break;
+			int tmpX = rand() % (map_w - 1) + 1;
+			int tmpY = rand() % (map_h - 1) + 1;
+			if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+			{
+				if (stack.getNumEnemies() < maxEnemies)
+				{
+					map[tmpY * map_w + tmpX] = L'E';
+					e1.setX(tmpX);
+					e1.setY(tmpY);
+					stack.addEnemy(e1);
+					break;
+				}
+				else
+				{
+					break;
+				}
+			}
 		}
-	} 
+	}
 
 	HANDLE sbuf_h = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	DWORD dwBytesWritten = 0;
@@ -108,6 +124,25 @@ int main()
 			} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
 			map[yEnemy * map_w + xEnemy] = L'E';
 		}*/
+
+		if (totalTime >= 4.0)
+		{
+			
+			cEnemy e1;
+			int tmpX = rand() % (map_w - 1) + 1;
+			int tmpY = rand() % (map_h - 1) + 1;
+			if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+			{
+				if (stack.getNumEnemies() < 5)
+				{
+					map[tmpY * map_w + tmpX] = L'E';
+					e1.setX(tmpX);
+					e1.setY(tmpY);
+					stack.addEnemy(e1);
+					totalTime = 0.0;
+				}	
+			}
+		}
 
 		timeStart = chrono::system_clock::now();
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
@@ -162,7 +197,7 @@ int main()
 				}
 			}
 
-			if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+			if (GetAsyncKeyState(VK_SPACE) & 0x0001) // & 0x8000)
 			{
 				float distShot = 0.0;
 				float shotX = xPlayer;
@@ -188,16 +223,19 @@ int main()
 
 				if (enemyHit)
 				{
-					map[e1.getPosY() * map_w + e1.getPosX()] = L' ';
+					map[int(shotY) * map_w + int(shotX)] = L' ';
+					stack.removeEnemy(int(shotX), int(shotY));
+					totalTime = 0.0;
+					/*map[e1.getPosY() * map_w + e1.getPosX()] = L' ';
 					e1.setX(0);
-					e1.setY(0);
+					e1.setY(0);*/
 					/*do {
 						xEnemy = rand() % (map_w - 1) + 1;
 						yEnemy = rand() % (map_h - 1) + 1;
 					} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
 					map[yEnemy * map_w + xEnemy] = L'E';*/
 
-					while (1)
+					/*while (1)
 					{
 						int tmpX = rand() % (map_w - 1) + 1;
 						int tmpY = rand() % (map_h - 1) + 1;
@@ -208,7 +246,7 @@ int main()
 							e1.setY(tmpY);
 							break;
 						}
-					}
+					}*/
 
 				}
 			}
@@ -303,8 +341,6 @@ int main()
 						cornerHit = true;
 				}
 
-				
-
 				int ceiling = int(screen_h / 2.0) - int(screen_h / 2.0 * 1.0 / (1.0 + distance));
 				int floor = int(screen_h / 2.0) + int(screen_h / 2.0 * 1.0 / (1.0 + distance));
 				// rendering walls, floor and ceiling 
@@ -389,7 +425,32 @@ int main()
 					sbuf[(y + 18)*screen_w + x + 58] = L'X';
 
 				}
+			}
 
+			// Draw Weapon
+
+			for (int i = 0; i < 20; i++)		// 70
+			{
+				int k = i - 7;
+					for (int j = 0; j < 8; j++)
+						sbuf[(i + 25) * screen_w + j + i + 70] = 0x2588;
+
+					if ( i > 8)
+					{
+						
+						
+						for (int j = 0; j < k; j++)
+							sbuf[(i + 25) * screen_w + j + 77] = 0x2588;
+						
+					}
+					if (i > 8)
+					{
+
+
+						for (int j = 0; j < k; j++)
+							sbuf[(i + 23) * screen_w + j + 90] = 0x2588;
+
+					}
 			}
 
 			// Draw the map "on top of the screen" ===========================================================
