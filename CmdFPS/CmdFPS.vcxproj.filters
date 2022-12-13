@@ -21,9 +21,15 @@
     <ClCompile Include="src\Enemy.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\Weapon.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Enemy.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Weapon.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

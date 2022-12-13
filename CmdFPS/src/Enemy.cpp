@@ -1,17 +1,20 @@
 #include "Enemy.h"
+#include <iostream>
 
 cEnemy::cEnemy()
 {
 	mPosX = 0;
 	mPosY = 0;
-	mNextPtr = nullptr;
+	mHealth = 100;
+	mNextPtr = NULL;
 }
 
 cEnemy::cEnemy(int pX, int pY)
 {
 	mPosX = pX;
 	mPosY = pY;
-	mNextPtr = nullptr;
+	mHealth = 100;
+	mNextPtr = NULL;
 }
 
 void cEnemy::setX(int pX)
@@ -45,7 +48,7 @@ cEnemy* cEnemy::getNxtPtr()
 
 int cEnemy::getPosX()
 {
-	return mPosX;
+ 	return mPosX;
 }
 
 int cEnemy::getPosY()
@@ -53,16 +56,26 @@ int cEnemy::getPosY()
 	return mPosY;;
 }
 
+int cEnemy::isHit(float pDmg)
+{
+	mHealth -= pDmg;
+	return mHealth;
+}
+
 cEnemyStack::cEnemyStack()
 {
-	mFirstPointer = nullptr;
+	mFirstPointer = NULL;
 	mNumEnemies = 0;
+	mNumMaxEnemies = 5;
 	
 }
 
 cEnemyStack::cEnemyStack(int pMaxNumEnemies)
 {
 	mNumMaxEnemies = pMaxNumEnemies;
+	mNumEnemies = 0;
+	mFirstPointer = NULL;
+	
 }
 
 cEnemy* cEnemyStack::traverse(cEnemy* pPtr, cEnemy* pTrgtPtr)
@@ -91,43 +104,53 @@ cEnemy* cEnemyStack::whoIsHit(cEnemy* pPtr, int px, int py)
 //	return tmpPtr->getPosY() * mWidth + tmpPtr->getPosX();
 //}
 
-void cEnemyStack::addEnemy(cEnemy& pE)
+bool cEnemyStack::addEnemy(cEnemy& pE)
 {
 	if (mNumEnemies == 0)
 	{
 		cEnemy* tmpPtr = new cEnemy(pE.getPosX(), pE.getPosY());
 		mFirstPointer = tmpPtr;
 		mNumEnemies++;
+		return true;
 	}
-	else if (mNumEnemies < 5)
+	else if (mNumEnemies < mNumMaxEnemies)
 	{
-		cEnemy* lastPtr = traverse(mFirstPointer, nullptr);
+		cEnemy* lastPtr = traverse(mFirstPointer, NULL);
 		cEnemy* tmpPtr = new cEnemy(pE.getPosX(), pE.getPosY());
 		lastPtr->setNxtPtr(tmpPtr);
 		mNumEnemies++;
-	}
-}
-
-void cEnemyStack::removeEnemy(int px, int py)
-{
-	cEnemy* HitPtr = whoIsHit(mFirstPointer, px, py);
-	cEnemy* tmpPtr = HitPtr->getNxtPtr();
-	if (tmpPtr != nullptr)
-		HitPtr->setNxtPtr(nullptr);
-
-	if (HitPtr == mFirstPointer)
-	{
-		delete mFirstPointer;
-		mFirstPointer = tmpPtr;
-		mNumEnemies--;
+		
+		return true;
 	}
 	else
+		return false;
+}
+
+bool cEnemyStack::removeEnemy(int px, int py, float pDmg)
+{
+	cEnemy* HitPtr = whoIsHit(mFirstPointer, px, py);
+	if (HitPtr->isHit(pDmg) <= 0)
 	{
-		cEnemy* PrevPtr = traverse(mFirstPointer, HitPtr);
-		delete HitPtr;
-		PrevPtr->setNxtPtr(tmpPtr);
+		cEnemy* tmpPtr = HitPtr->getNxtPtr();
+		if (tmpPtr != NULL)
+			HitPtr->setNxtPtr(NULL);
+
+		if (HitPtr == mFirstPointer)
+		{
+			delete mFirstPointer;
+			mFirstPointer = tmpPtr;
+		}
+		else
+		{
+			cEnemy* PrevPtr = traverse(mFirstPointer, HitPtr);
+			delete HitPtr;
+			PrevPtr->setNxtPtr(tmpPtr);
+		}
 		mNumEnemies--;
+		return true;
 	}
+	else
+		return false;
 }
 
 int cEnemyStack::getNumEnemies()

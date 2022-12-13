@@ -13,9 +13,11 @@ public:
 	//cEnemy* getPrevPtr();
 	int getPosX();
 	int getPosY();
+	int isHit(float pDmg);
 private:
 	int mPosX;
 	int mPosY;
+	int mHealth;
 	cEnemy* mNextPtr;
 	//cEnemy* mPrevPtr;
 };
@@ -29,8 +31,8 @@ public:
 	cEnemy* traverse(cEnemy* pPtr, cEnemy* pTrgtPtr);				// address of last enemy in stack
 	cEnemy* whoIsHit(cEnemy* pPtr, int px, int py);
 	//int getHitIdx(int px, int py);
-	void addEnemy(cEnemy& pE);
-	void removeEnemy(int px, int py);
+	bool addEnemy(cEnemy& pE);
+	bool removeEnemy(int px, int py, float pDmg);
 	int getNumEnemies();
 
 	

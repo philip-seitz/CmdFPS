@@ -7,6 +7,7 @@
 #include <ctime>
 
 #include "Enemy.h"
+#include "Weapon.h"
 #define PI 3.14;
 #define FOV 60.0
 using namespace std;
@@ -29,7 +30,8 @@ int main()
 
 	// Enemy Attributes ==============================================================================
 
-	int maxEnemies = 5;
+	int maxEnemies = 50;
+	float spawnInterval = 3.0;
 
 	// Screen Buffer initialization ==================================================================
 
@@ -45,7 +47,9 @@ int main()
 			sbuf[y * screen_w + x] = L' ';
 		}
 	}
-	cEnemy tmp;
+	cEnemy e1;
+	cEnemy e2;
+
 	// Map initialization ============================================================================
 
 	int map_w = 12;
@@ -66,16 +70,17 @@ int main()
 	map += L"#          #";		// 10
 	map += L"############";		// 11
 
-	// Enemy Attributes for testing ==================================================================
-	cEnemyStack stack;
-	for (int i = 0; i < 1; i++)
+	// Spawn the first enemy  ========================================================================
+
+	cEnemyStack stack(maxEnemies);
+	for (int i = 0; i < 9; i++)
 	{
-		cEnemy e1;
 		while (1)
 		{
 			int tmpX = rand() % (map_w - 1) + 1;
 			int tmpY = rand() % (map_h - 1) + 1;
-			if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+			int tmpIdx = tmpY * map_w + tmpX;
+			if ((map[tmpIdx] == L' ') && tmpIdx != int(yPlayer)*map_w + int(xPlayer))
 			{
 				if (stack.getNumEnemies() < maxEnemies)
 				{
@@ -92,6 +97,10 @@ int main()
 			}
 		}
 	}
+
+	// Weapons ====================================================================================
+
+	cWeapon currWeapon;
 
 	HANDLE sbuf_h = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	DWORD dwBytesWritten = 0;
@@ -113,34 +122,29 @@ int main()
 		float dt = timeElapsed.count();
 		totalTime += dt;
 		
-		// change the position of the enemy every 10 seconds
-		/*if (totalTime >= 10.0)
+		if (totalTime >= spawnInterval)
 		{
-			totalTime = 0.0;
-			map[yEnemy * map_w + xEnemy] = L' ';
-			do {
-				xEnemy = rand() % (map_w - 1) + 1;
-				yEnemy = rand() % (map_h - 1) + 1;
-			} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
-			map[yEnemy * map_w + xEnemy] = L'E';
-		}*/
-
-		if (totalTime >= 4.0)
-		{
-			
-			cEnemy e1;
-			int tmpX = rand() % (map_w - 1) + 1;
-			int tmpY = rand() % (map_h - 1) + 1;
-			if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
+			while (stack.getNumEnemies() < maxEnemies)
 			{
-				if (stack.getNumEnemies() < 5)
+				int tmpX = rand() % (map_w - 1) + 1;
+				int tmpY = rand() % (map_h - 1) + 1;
+				int tmpIdx = tmpY * map_w + tmpX;
+				if ((map[tmpIdx] == L' ') && tmpIdx != yPlayer * map_w + xPlayer)
 				{
-					map[tmpY * map_w + tmpX] = L'E';
-					e1.setX(tmpX);
-					e1.setY(tmpY);
-					stack.addEnemy(e1);
-					totalTime = 0.0;
-				}	
+					if (stack.getNumEnemies() < maxEnemies)
+					{
+						map[tmpY * map_w + tmpX] = L'E';
+						e2.setX(tmpX);
+						e2.setY(tmpY);
+						stack.addEnemy(e2);
+						totalTime = 0.0;
+						break;
+					}
+					else
+					{
+						break;
+					}
+				}
 			}
 		}
 
@@ -221,33 +225,11 @@ int main()
 					}
 				}
 
-				if (enemyHit)
+				if (enemyHit && stack.removeEnemy(int(shotX), int(shotY), currWeapon.getDmg()))
 				{
 					map[int(shotY) * map_w + int(shotX)] = L' ';
-					stack.removeEnemy(int(shotX), int(shotY));
+					
 					totalTime = 0.0;
-					/*map[e1.getPosY() * map_w + e1.getPosX()] = L' ';
-					e1.setX(0);
-					e1.setY(0);*/
-					/*do {
-						xEnemy = rand() % (map_w - 1) + 1;
-						yEnemy = rand() % (map_h - 1) + 1;
-					} while ((map[yEnemy * map_w + xEnemy] != L' ') && (xPlayer != xEnemy));
-					map[yEnemy * map_w + xEnemy] = L'E';*/
-
-					/*while (1)
-					{
-						int tmpX = rand() % (map_w - 1) + 1;
-						int tmpY = rand() % (map_h - 1) + 1;
-						if ((map[tmpY * map_w + tmpX] == L' ') && tmpX != xPlayer)
-						{
-							map[tmpY * map_w + tmpX] = L'E';
-							e1.setX(tmpX);
-							e1.setY(tmpY);
-							break;
-						}
-					}*/
-
 				}
 			}
 
@@ -264,7 +246,6 @@ int main()
 										0x2592,			// medium shade
 										0x2591};		// light shade		
 											
-
 				wchar_t shade_f[] = {	L'#',
 										L'x',
 										L'-'};
@@ -400,8 +381,6 @@ int main()
 						else
 							sbuf[y * screen_w + x] = shade_w[3];
 					}
-
-					
 				}
 			}
 
@@ -423,33 +402,44 @@ int main()
 				for (int y = 0; y < 2; y++)
 				{
 					sbuf[(y + 18)*screen_w + x + 58] = L'X';
-
 				}
 			}
 
 			// Draw Weapon
-
+			// Problem that happened because of the weapon drawing:
+			// Because the screen buffer is a dynamic array its memory is allocated on the heap.
+			// On the heap you don't have out of bounds errors, IT JUST WRITES there. Even though
+			// the memory doesn't belong to the array.
+			// In my case I drew the weapon (in the screen buffer) partially out of the bounds of the 
+			// array. 
+			// Since the enemies which are also on the heap, were initialized before the weapon drawing 
+			// happened, it overwrote some of the pointers of the enemies, which then destroyed my 
+			// linked list :(
+			// In short:
+			// Went out of bounds of sbuf and screwed my linked list memory.
 			for (int i = 0; i < 20; i++)		// 70
 			{
 				int k = i - 7;
-					for (int j = 0; j < 8; j++)
+				for (int j = 0; j < 8; j++)
+				{
+					if ((i + 25) * screen_w + j + i + 70 < screen_w * screen_h)
 						sbuf[(i + 25) * screen_w + j + i + 70] = 0x2588;
-
+				}
 					if ( i > 8)
 					{
-						
-						
 						for (int j = 0; j < k; j++)
-							sbuf[(i + 25) * screen_w + j + 77] = 0x2588;
-						
+						{
+							if ((i + 25) * screen_w + j + i + 70 < screen_w * screen_h)
+								sbuf[(i + 25) * screen_w + j + 77] = 0x2588;
+						}
 					}
 					if (i > 8)
 					{
-
-
 						for (int j = 0; j < k; j++)
-							sbuf[(i + 23) * screen_w + j + 90] = 0x2588;
-
+						{
+							if ((i + 25) * screen_w + j + i + 70 < screen_w * screen_h)
+								sbuf[(i + 23) * screen_w + j + 90] = 0x2588;
+						}
 					}
 			}
 
@@ -463,7 +453,7 @@ int main()
 				}
 			}
 			sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
-
+			sbuf[screen_h * screen_w - 1] = '\0';
 			WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
 			timeEnd = chrono::system_clock::now();
 		}
