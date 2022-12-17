@@ -519,6 +519,25 @@ int main()
 				sbuf[(y)*screen_w + x + 1] = map[y * map_w + x];
 			}
 		}
+
+		// Draw ammo count ==============================================================================
+
+		// blank space for ammo display
+		for (int x = 0; x < currWeapon.getBulletCount() + 2; x++)
+		{
+			for (int y = 0; y < 3; y++)
+			{
+
+				sbuf[(y + 35) * screen_w + (x + 4)] = L' ';
+			}
+		}
+
+		// draw the bullet count (mw2 like)
+		for (int x = 0; x < currWeapon.getBulletCount(); x++)
+		{
+			sbuf[36 * screen_w + (x + 5)] = L'|';
+		}
+
 		sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
 		sbuf[screen_h * screen_w - 1] = '\0';
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);

@@ -3,7 +3,7 @@
 cWeapon::cWeapon()
 {
 	mDamage = 33.4;
-	mMagSize = 12;
+	mMagSize = 20;
 	mBulletCount = mMagSize;
 	mReloadTime = 2.4;
 }
