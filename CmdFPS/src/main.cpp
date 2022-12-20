@@ -346,11 +346,11 @@ int main()
 					break;
 				}
 
-				else if (x == 0 || x == screen_w - 1)
+				else if (x == int((screen_w-1 )/ 2))
 				{
 					if (numRadar < radarSize)
 					{
-						if ((int(testY) * map_w + int(testX) != lastRadarY * map_w + lastRadarX) && distance <= 2.0)
+						if ((int(testY) * map_w + int(testX) != lastRadarY * map_w + lastRadarX) && distance <= 4.0)
 						{
 							radar[numRadar].iX = int(testX);
 							radar[numRadar].iY = int(testY);
