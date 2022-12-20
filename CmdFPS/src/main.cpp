@@ -9,8 +9,14 @@
 #include "Enemy.h"
 #include "Weapon.h"
 #define PI 3.14;
-#define FOV 60.0
+#define FOV 100.0
 using namespace std;
+
+struct RadarIdx
+{
+	int iX;
+	int iY;
+};
 
 int main()
 {
@@ -26,12 +32,13 @@ int main()
 	float yPlayer = 4;
 	float anglePlayer = 0;
 	float fov = FOV / 180.0 * PI;			// rad = 2pi*angle/360
+	int radarSize = 10;
 	// FOV should be equal to or below 120° (usual FOV cap)
 
 	// Enemy Attributes ==============================================================================
 
-	int maxEnemies = 30;
-	float spawnInterval = 0.5;
+	int maxEnemies = 0;
+	float spawnInterval = 2.0;
 
 	// Screen Buffer initialization ==================================================================
 
@@ -48,7 +55,6 @@ int main()
 		}
 	}
 	cEnemy e1;
-	cEnemy e2;
 
 	// Map initialization ============================================================================
 
@@ -73,7 +79,7 @@ int main()
 	// Spawn the first enemy  ========================================================================
 
 	cEnemyStack stack(maxEnemies);
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		while (1)
 		{
@@ -116,7 +122,6 @@ int main()
 		}
 	}
 	
-
 	HANDLE sbuf_h = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	DWORD dwBytesWritten = 0;
 	SetConsoleActiveScreenBuffer(sbuf_h);
@@ -127,6 +132,7 @@ int main()
 	float speed = 2.0;
 	bool gameOver = false;
 
+
 	// Start Game Loop ===============================================================================
 
 	timeEnd = chrono::system_clock::now();
@@ -136,6 +142,9 @@ int main()
 		timeElapsed = timeEnd - timeStart;
 		float dt = timeElapsed.count();
 		totalTime += dt;
+		RadarIdx radar[10];
+		int numRadar = 0;
+		
 		
 		if (totalTime >= spawnInterval)
 		{
@@ -149,9 +158,9 @@ int main()
 					if (stack.getNumEnemies() < maxEnemies)
 					{
 						map[tmpY * map_w + tmpX] = L'E';
-						e2.setX(tmpX);
-						e2.setY(tmpY);
-						stack.addEnemy(e2);
+						e1.setX(tmpX);
+						e1.setY(tmpY);
+						stack.addEnemy(e1);
 						totalTime = 0.0;
 						break;
 					}
@@ -250,7 +259,7 @@ int main()
 
 		}
 
-		if (GetAsyncKeyState(VK_SPACE) & 0x0001 && !reloading) // & 0x8000)
+		if ((GetAsyncKeyState(VK_SPACE) & 0x0001) && !reloading) // & 0x8000)
 		{
 			float distShot = 0.0;
 			float shotX = xPlayer;
@@ -293,6 +302,8 @@ int main()
 			float fRayY = -cos(fRayAngle);				// y axis points downwards
 			float testX = xPlayer;
 			float testY = yPlayer;
+			int lastRadarX = int(xPlayer);
+			int lastRadarY = int(yPlayer);
 			float distance = 0;
 			short shade_w[] = {		0x2588,			// full 
 									0x2593,			// dark shade
@@ -334,6 +345,23 @@ int main()
 					wallHit = true;
 					break;
 				}
+
+				else if (x == 0 || x == screen_w - 1)
+				{
+					if (numRadar < radarSize)
+					{
+						if ((int(testY) * map_w + int(testX) != lastRadarY * map_w + lastRadarX) && distance <= 2.0)
+						{
+							radar[numRadar].iX = int(testX);
+							radar[numRadar].iY = int(testY);
+							lastRadarX = int(testX);
+							lastRadarY = int(testY);
+							numRadar++;
+
+						}
+					}
+				}
+				
 			}
 			float distances[4];
 			float angles[4];
@@ -518,6 +546,11 @@ int main()
 			{
 				sbuf[(y)*screen_w + x + 1] = map[y * map_w + x];
 			}
+		}
+
+		for (int idx = 0; idx < numRadar; idx++)
+		{
+			sbuf[radar[idx].iY * screen_w + radar[idx].iX + 1] = L'.';
 		}
 
 		// Draw ammo count ==============================================================================
