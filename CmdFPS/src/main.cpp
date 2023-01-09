@@ -573,7 +573,34 @@ int main()
 
 		sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
 		sbuf[screen_h * screen_w - 1] = '\0';
+
+		// Draw FPS	
+		for (int i = 0; i < size(L"FPS: "); i++)
+		{
+			sbuf[i + 50] = L"FPS: "[i];
+
+		}
+
+		int temp = int(1/dt);
+		int z_potenz = 0;
+
+		do
+		{
+			temp = temp / 10;
+			z_potenz++;
+
+		} while (temp > 0);
+
+		temp = int(1 / dt);
+		for (int i = 0; i < z_potenz; i++)
+		{
+			sbuf[size(L"FPS: ") + z_potenz - i + 50] = (temp % 10) + 48;
+			temp = temp / 10;
+		}
+
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
+		//WriteConsole(sbuf_h, sbuf, );
+		
 		timeEnd = chrono::system_clock::now();
 	}
 
