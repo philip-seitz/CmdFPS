@@ -76,7 +76,7 @@ int main()
 	map += L"#          #";		// 10
 	map += L"############";		// 11
 
-	// Spawn the first enemy  ========================================================================
+	// Spawn the first enemies  ======================================================================
 
 	cEnemyStack stack(maxEnemies);
 	for (int i = 0; i < 2; i++)
@@ -132,7 +132,6 @@ int main()
 	float speed = 2.0;
 	bool gameOver = false;
 
-
 	// Start Game Loop ===============================================================================
 
 	timeEnd = chrono::system_clock::now();
@@ -145,6 +144,7 @@ int main()
 		RadarIdx radar[10];
 		int numRadar = 0;
 		
+		// Spawn enemy after certain time interval =============================
 		
 		if (totalTime >= spawnInterval)
 		{
@@ -173,6 +173,9 @@ int main()
 		}
 
 		timeStart = chrono::system_clock::now();
+
+		// Input Handling (player movement) ====================================
+
 		if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 		{
 			anglePlayer -= speed * dt;
@@ -249,14 +252,12 @@ int main()
 				currWeapon = floorWeapon;
 				map[int(yPlayer) * map_w + int(xPlayer)] = L' ';
 			}
-
 		}
 
 		if (GetAsyncKeyState(0x52) & 0x0001)		// R-Key
 		{
 			if (currWeapon.getBulletCount() < currWeapon.getMagSize())
 				reloading = true;
-
 		}
 
 		if ((GetAsyncKeyState(VK_SPACE) & 0x0001) && !reloading) // & 0x8000)
@@ -294,6 +295,8 @@ int main()
 				totalTime = 0.0;
 			}
 		}
+
+		// Raycasting to display shades etc. ===================================
 
 		for (int x = 0; x < screen_w; x++)
 		{
@@ -357,14 +360,14 @@ int main()
 							lastRadarX = int(testX);
 							lastRadarY = int(testY);
 							numRadar++;
-
 						}
 					}
 				}
-				
 			}
 			float distances[4];
 			float angles[4];
+
+			// Drawing edges a piece of wall ======================================
 
 			if (wallHit)
 			{
@@ -373,7 +376,6 @@ int main()
 				{
 					for (int j = 0; j < 2; j++)
 					{
-							
 						float vecBackX = (xPlayer - (int(testX) + i));
 						float vecBackY = (yPlayer - (int(testY) + j));
 						float d = sqrt(pow(vecBackX, 2) + pow(vecBackY, 2));
@@ -403,6 +405,8 @@ int main()
 					cornerHit = true;
 			}
 
+			// wall, sky and floor pct-ages based on distance ===================== 
+
 			int ceiling = int(screen_h / 2.0) - int(screen_h / 2.0 * 1.0 / (1.0 + distance));
 			int floor = int(screen_h / 2.0) + int(screen_h / 2.0 * 1.0 / (1.0 + distance));
 			// rendering walls, floor and ceiling 
@@ -420,7 +424,6 @@ int main()
 						sbuf[y * screen_w + x] = shade_f[1];
 					else if (y >= 20.0)
 						sbuf[y * screen_w + x] = shade_f[2];
-						
 				}
 				else		// drawing the walls with shading
 				{
@@ -476,7 +479,7 @@ int main()
 		// To decrease the chance of going to far forwards with the test you can also reduce the distance of the step
 		// by introducing a scaler with 0.1.
 
-		// Draw x-hair on top of the screen
+		// Draw x-hair on top of the screen ====================================
 
 		for (int x = 0; x < 3; x++)
 		{
@@ -486,7 +489,8 @@ int main()
 			}
 		}
 
-		// Draw Weapon
+		// Draw Weapon and reloading animation =================================
+		// 
 		// Problem that happened because of the weapon drawing:
 		// Because the screen buffer is a dynamic array its memory is allocated on the heap.
 		// On the heap you don't have out of bounds errors, IT JUST WRITES there. Even though
@@ -560,7 +564,6 @@ int main()
 		{
 			for (int y = 0; y < 3; y++)
 			{
-
 				sbuf[(y + 35) * screen_w + (x + 4)] = L' ';
 			}
 		}
@@ -574,11 +577,11 @@ int main()
 		sbuf[(int(yPlayer)) * screen_w + int(xPlayer) + 1] = L'o';
 		sbuf[screen_h * screen_w - 1] = '\0';
 
-		// Draw FPS	
+		// Draw FPS	============================================================
+
 		for (int i = 0; i < size(L"FPS: "); i++)
 		{
 			sbuf[i + 50] = L"FPS: "[i];
-
 		}
 
 		int temp = int(1/dt);
@@ -598,13 +601,15 @@ int main()
 			temp = temp / 10;
 		}
 
+		// Write to the screen buffer ==========================================
+
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
 		//WriteConsole(sbuf_h, sbuf, );
 		
 		timeEnd = chrono::system_clock::now();
 	}
 
-		// End of Game Loop ==============================================================================
+		// End of Game Loop =============================================================================
 
 		return 0;
 }
