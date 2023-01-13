@@ -13,11 +13,11 @@ public:
 	//cEnemy* getPrevPtr();
 	int getPosX();
 	int getPosY();
-	int isHit(float pDmg);
+	float isHit(float pDmg);
 private:
 	int mPosX;
 	int mPosY;
-	int mHealth;
+	float mHealth;
 	cEnemy* mNextPtr;
 	//cEnemy* mPrevPtr;
 };
@@ -34,6 +34,7 @@ public:
 	bool addEnemy(cEnemy& pE);
 	bool removeEnemy(int px, int py, float pDmg);
 	int getNumEnemies();
+	int NumCloseEnemies(int pX, int pY);
 
 	
 private:

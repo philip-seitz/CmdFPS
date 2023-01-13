@@ -35,12 +35,17 @@ int main()
 	float anglePlayer = 0;
 	float fov = FOV / 180.0 * PI;			// rad = 2pi*angle/360
 	int radarSize = 10;
+	int healthPlayer = 100;
+	int maxHealthPlayer = 150;
+	int score = 0;
+
 	// FOV should be equal to or below 120° (usual FOV cap)
 
 	// Enemy Attributes ==============================================================================
 
-	int maxEnemies = 0;
+	int maxEnemies = 30;
 	float spawnInterval = 2.0;
+	int damageEnemy = 15;
 
 	// Screen Buffer initialization ==================================================================
 
@@ -81,7 +86,7 @@ int main()
 	// Spawn the first enemies  ======================================================================
 
 	cEnemyStack stack(maxEnemies);
-	for (int i = 0; i < 2; i++)
+	for(int i = 0; i < 1; i++)
 	{
 		while (1)
 		{
@@ -137,18 +142,29 @@ int main()
 	// Start Game Loop ===============================================================================
 
 	timeEnd = chrono::system_clock::now();
-	float totalTime = 0;			// über time elapsed hochzählen und dann counter zeug machen
+	float spawnTime = 0.0;			// über time elapsed hochzählen und dann counter zeug machen
+	float eNearTime = 0.0;
+	float runTime = 0.0;
+	
 	while (!gameOver)
 	{
 		timeElapsed = timeEnd - timeStart;
 		float dt = timeElapsed.count();
-		totalTime += dt;
+		spawnTime += dt;
+		runTime += dt;
 		RadarIdx radar[10];
 		int numRadar = 0;
 		
 		// Spawn enemy after certain time interval =============================
 		
-		if (totalTime >= spawnInterval)
+		if (runTime >= 4)
+		{
+			spawnInterval -= 0.2;
+			runTime = 0;
+		}
+			
+
+		if (spawnTime >= spawnInterval)
 		{
 			while (stack.getNumEnemies() < maxEnemies)
 			{
@@ -163,7 +179,7 @@ int main()
 						e1.setX(tmpX);
 						e1.setY(tmpY);
 						stack.addEnemy(e1);
-						totalTime = 0.0;
+						spawnTime = 0.0;
 						break;
 					}
 					else
@@ -284,6 +300,7 @@ int main()
 						if (map[int(shotY) * map_w + (int(shotX))] == L'E')
 						{
 							enemyHit = true;
+							score += 50;
 						}
 						break;
 					}
@@ -293,10 +310,29 @@ int main()
 			if (enemyHit && stack.removeEnemy(int(shotX), int(shotY), currWeapon.getDmg()))
 			{
 				map[int(shotY) * map_w + int(shotX)] = L' ';
-					
-				totalTime = 0.0;
+				if (healthPlayer + 5 <= maxHealthPlayer)
+					healthPlayer += 5;
+				score += 1000;
+				spawnTime = 0.0;
 			}
 		}
+
+		int enemiesNear = stack.NumCloseEnemies(xPlayer, yPlayer);
+		if (enemiesNear >= 1)
+		{
+			eNearTime += dt;
+			if (eNearTime >= 2.0)
+			{
+				healthPlayer -= damageEnemy * enemiesNear;
+				if (healthPlayer <= 0)
+					gameOver = true;
+				eNearTime = 0.0;
+			}	
+
+
+		}
+		else
+			eNearTime = 0.0;
 
 		// Raycasting to display shades etc. ===================================
 
@@ -599,20 +635,72 @@ int main()
 		temp = int(1 / dt);
 		for (int i = 0; i < z_potenz; i++)
 		{
-			sbuf[size(L"FPS: ") + z_potenz - i + 50] = (temp % 10) + 48;
+			sbuf[size(L"FPS: ") + z_potenz - i + 50] = (temp % 10) + 48;	// + 48 wegen ASCII-Umwandlung
+			temp = temp / 10;
+		}
+
+
+		// Draw Score ==========================================================
+
+		for (int i = 0; i < size(L"score: "); i++)
+		{
+			sbuf[i + 70] = L"score: "[i];
+		}
+
+		temp = score;
+		z_potenz = 0;
+
+		do
+		{
+			temp = temp / 10;
+			z_potenz++;
+
+		} while (temp > 0);
+
+		temp = score;
+		for (int i = 0; i < z_potenz; i++)
+		{
+			sbuf[size(L"score ") + z_potenz - i + 70] = (temp % 10) + 48;
+			temp = temp / 10;
+		}
+
+		// draw player health ==================================================
+
+		for (int i = 0; i < size(L"HP: "); i++)
+		{
+			sbuf[i + 90] = L"HP: "[i];
+		}
+
+		temp = healthPlayer;
+		z_potenz = 0;
+
+		do
+		{
+			temp = temp / 10;
+			z_potenz++;
+
+		} while (temp > 0);
+
+		temp = healthPlayer;
+		for (int i = 0; i < z_potenz; i++)
+		{
+			sbuf[size(L"score ") + z_potenz - i + 90] = (temp % 10) + 48;
 			temp = temp / 10;
 		}
 
 		// Write to the screen buffer ==========================================
-
+		// swprintf_s(sbuf, 14, L"FPS =%3.2f ", 1.0 / dt);
 		WriteConsoleOutputCharacter(sbuf_h, sbuf, screen_w * screen_h, { 0,0 }, &dwBytesWritten);
 		//WriteConsole(sbuf_h, sbuf, );
 		
 		timeEnd = chrono::system_clock::now();
 	}
 
+	cout << "GAME OVER " << "score: " << score <<  endl;
+	// cin.get();
+
 		// End of Game Loop =============================================================================
 
-		return 0;
+	return 0;
 }
 

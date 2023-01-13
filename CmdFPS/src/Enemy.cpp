@@ -1,11 +1,12 @@
 #include "Enemy.h"
 #include <iostream>
+#include <math.h>
 
 cEnemy::cEnemy()
 {
 	mPosX = 0;
 	mPosY = 0;
-	mHealth = 100;
+	mHealth = 100.0;
 	mNextPtr = NULL;
 }
 
@@ -13,7 +14,7 @@ cEnemy::cEnemy(int pX, int pY)
 {
 	mPosX = pX;
 	mPosY = pY;
-	mHealth = 100;
+	mHealth = 100.0;
 	mNextPtr = NULL;
 }
 
@@ -56,7 +57,7 @@ int cEnemy::getPosY()
 	return mPosY;;
 }
 
-int cEnemy::isHit(float pDmg)
+float cEnemy::isHit(float pDmg)
 {
 	mHealth -= pDmg;
 	return mHealth;
@@ -98,6 +99,25 @@ cEnemy* cEnemyStack::whoIsHit(cEnemy* pPtr, int px, int py)
 	}
 }
 
+int cEnemyStack::NumCloseEnemies(int pX, int pY)
+{
+	cEnemy* tmpPtr = mFirstPointer;
+	int numClose = 0;
+
+	while (tmpPtr != NULL)
+	{
+		int eX = tmpPtr->getPosX();
+		int eY = tmpPtr->getPosY();
+		if (sqrt(pow((eX - pX), 2) + pow((eY - pY), 2)) <= 1.5)
+		{
+			numClose++;
+		}
+		tmpPtr = tmpPtr->getNxtPtr();
+	}
+
+	return numClose;
+}
+
 //int cEnemyStack::getHitIdx(int px, int py)
 //{
 //	cEnemy* tmpPtr = whoIsHit(mFirstPointer, px, py);
@@ -129,7 +149,7 @@ bool cEnemyStack::addEnemy(cEnemy& pE)
 bool cEnemyStack::removeEnemy(int px, int py, float pDmg)
 {
 	cEnemy* HitPtr = whoIsHit(mFirstPointer, px, py);
-	if (HitPtr->isHit(pDmg) <= 0)
+	if (HitPtr->isHit(pDmg) <= 0.0)
 	{
 		cEnemy* tmpPtr = HitPtr->getNxtPtr();
 		if (tmpPtr != NULL)
@@ -137,12 +157,14 @@ bool cEnemyStack::removeEnemy(int px, int py, float pDmg)
 
 		if (HitPtr == mFirstPointer)
 		{
+			mFirstPointer->setNxtPtr(NULL);					// Doesn't seem to be needed but feels a bit safer.
 			delete mFirstPointer;
 			mFirstPointer = tmpPtr;
 		}
 		else
 		{
 			cEnemy* PrevPtr = traverse(mFirstPointer, HitPtr);
+			HitPtr->setNxtPtr(NULL);
 			delete HitPtr;
 			PrevPtr->setNxtPtr(tmpPtr);
 		}
